@@ -1,13 +1,12 @@
 name: Cartonnettes du mois
 
-# Quand l'automatisation se lance :
 on:
   schedule:
     - cron: "0 6 1 * *"     # le 1er de chaque mois à 06:00 UTC
   workflow_dispatch: {}       # + bouton "Run workflow" pour relancer à la demande
 
 permissions:
-  contents: write             # nécessaire pour publier le fichier dans une "release"
+  contents: write
 
 jobs:
   generer:
@@ -37,3 +36,25 @@ jobs:
           name: Cartonnettes du mois
           body: "PDF des cartonnettes Nifty du mois, mis à jour automatiquement."
           files: Cartonnettes-A4-portrait.pdf
+
+      - name: Envoyer le PDF par e-mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Cartonnettes Nifty <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: "Cartonnettes Nifty — PDF du mois"
+          body: |
+            Bonjour,
+
+            Voici le PDF des cartonnettes Nifty du mois, en pièce jointe.
+
+            Lien permanent (toujours à jour) :
+            https://github.com/95ordo-star/cartonnettes-nifty/releases/download/latest/Cartonnettes-A4-portrait.pdf
+
+            — Envoi automatique
+          attachments: Cartonnettes-A4-portrait.pdf
