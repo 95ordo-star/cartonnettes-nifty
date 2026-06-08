@@ -1,0 +1,39 @@
+name: Cartonnettes du mois
+
+# Quand l'automatisation se lance :
+on:
+  schedule:
+    - cron: "0 6 1 * *"     # le 1er de chaque mois à 06:00 UTC
+  workflow_dispatch: {}       # + bouton "Run workflow" pour relancer à la demande
+
+permissions:
+  contents: write             # nécessaire pour publier le fichier dans une "release"
+
+jobs:
+  generer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install pymupdf pillow numpy
+
+      - name: Générer le PDF (A4 portrait, nom fixe)
+        run: python cartonnettes_a4.py --orientation portrait --sortie Cartonnettes-A4-portrait.pdf
+
+      - name: Vérifier que le PDF a bien été créé
+        run: test -f Cartonnettes-A4-portrait.pdf
+
+      - name: Publier à l'adresse fixe (release "latest")
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Cartonnettes du mois
+          body: "PDF des cartonnettes Nifty du mois, mis à jour automatiquement."
+          files: Cartonnettes-A4-portrait.pdf
